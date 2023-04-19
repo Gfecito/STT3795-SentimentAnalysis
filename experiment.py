@@ -164,7 +164,7 @@ def experiment(params):
         score = model.evaluate(X_test, y_test, verbose=0)
         print('Test loss:', score[0]) 
         print('Test accuracy:', score[1])
-        
+
     elif model_type == "LogisticRegression":
         model = LogisticRegression()
         model.fit(X_train, y_train)
@@ -172,3 +172,35 @@ def experiment(params):
         print('Logistic Regression Accuracy:', model_score)
     
 
+if __name__ == "__main__":
+    import json
+    import argparse
+    # import wandb
+
+    # from datetime import datetime
+
+    # now = datetime.now()
+
+    # current_time = now.strftime("%H:%M:%S")
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--params", "-p", type=str, help="JSON params file")
+    parser.add_argument("--direct", "-d", type=str, help="JSON state string")
+    
+    arguments = parser.parse_args()
+    
+    if arguments.direct is not None:
+        params = json.loads(arguments.direct)
+    elif arguments.params is not None:
+        with open(arguments.params) as file:
+            params = json.load(file)
+    else:
+        params = {}
+
+    params = defaults(params, default_params)
+    # log_name = params["dataset"] + "-" + current_time
+    # wandb.init(project="CNN-Magic", name = log_name, entity="qinjerem", config=params)
+
+    experiment(params)
+
+    # wandb.finish()
