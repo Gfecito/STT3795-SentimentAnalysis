@@ -1,12 +1,12 @@
 {
-    "root_data" : "data",
+    "root_data" : "/data/ens/udemia/STT3795-SentimentAnalysis/data/emotion.csv",
     "maxlength": 30,
     "ngram": 1,
     "emb_dim": 300,
     "optimizer": "Adam",
     "lr": 0.001,
-    "loss": "binary_crossentropy",
-    "batch_size": 16,
-    "epochs": 10,
-    "model": "RNN",
+    "loss": "sparse_categorical_crossentropy",
+    "batch_size": 1024,
+    "epochs": 1,
+    "model": "MLP"
 }

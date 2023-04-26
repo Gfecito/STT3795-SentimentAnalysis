@@ -1,5 +1,5 @@
 default_params = {
-    "root_data" : "data",
+    "root_data" : "/data/ens/udemia/STT3795-SentimentAnalysis/data/emotion.csv",
     "maxlength": 30,
     "ngram": 1,
     "emb_dim": 300,
@@ -8,7 +8,7 @@ default_params = {
     "loss": "binary_crossentropy",
     "batch_size": 1024,
     "epochs": 10,
-    "model": "RNN",
+    "model": "RNN"
 }
 
 def defaults(dictionary, dictionary_defaults):
@@ -20,14 +20,14 @@ def defaults(dictionary, dictionary_defaults):
                 dictionary[key] = defaults(dictionary[key], value)
             elif isinstance(value, dict) or isinstance(dictionary[key], dict):
                 raise ValueError("Given dictionaries have incompatible structure")
-    return 
+    return dictionary
 
 def optimizer_function(type, lr):
     import tensorflow as tf
     from tensorflow import keras
 
     if type == "Adam":
-        return keras.optimizers.Adam(lr=lr)
+        return keras.optimizers.Adam(learning_rate=lr)
     elif type == "SGD":
         return keras.optimizers.SGD(lr=lr)
     else:
@@ -46,13 +46,10 @@ def cleaning(a):
     a = re.sub('\w*\d\w*', '', a)
     return a
 
-def stemSentence(sentence):
-    import nltk
-    nltk.download('punkt')
+def stemSentence(sentence, porter):
     from nltk.tokenize import sent_tokenize, word_tokenize
-    from nltk.stem import PorterStemmer
 
-    porter=PorterStemmer()
+    porter=porter
 
     token_words=word_tokenize(sentence)
     token_words
@@ -62,9 +59,10 @@ def stemSentence(sentence):
         stem_sentence.append(" ")
     return "".join(stem_sentence)
 
-def stem(x_train):
-    for i in range(len(x_train)):
-        x_train[i] = stemSentence(x_train[i])
+def stem(x_train, porter):
+    from tqdm import tqdm
+    for i in tqdm(range(len(x_train))):
+        x_train[i] = stemSentence(x_train[i], porter)
 
     return x_train
 
@@ -104,8 +102,13 @@ def experiment(params):
     from sklearn.feature_extraction.text import TfidfVectorizer
     import matplotlib.pyplot as plt
     from sklearn.metrics import classification_report
+    import nltk
+    from nltk.stem import PorterStemmer
+    nltk.download('punkt')
     plt.style.use('ggplot')
 
+    print("Start")
+    print(params)
     root_data = params["root_data"]
     maxlength = params["maxlength"]
     ngram = params["ngram"]
@@ -124,6 +127,7 @@ def experiment(params):
     def label_map(a):
         return label_sentiment_dict[a]
 
+    print("Preprocessing Data")
     df[0] = df[0].apply(label_map)
 
     df[5] = df[5].apply(cleaning)
@@ -131,7 +135,8 @@ def experiment(params):
     x_train = df[5].to_numpy()
     y_train = df[0].to_numpy()
 
-    x_train = stem(x_train)
+    porter=PorterStemmer()
+    x_train = stem(x_train, porter)
 
     X_train, X_test, y_train, y_test = train_test_split(x_train, y_train, test_size=0.02, random_state=22)
 
@@ -192,6 +197,7 @@ def experiment(params):
         print(classification_report(y_test, classes1))
 
     elif model_type == "LogisticRegression":
+        print("Vectorizing")
         vectorizer = TfidfVectorizer()
         X_train = vectorizer.fit_transform(X_train).astype('float16')
         X_test = vectorizer.transform(X_test).astype('float16')
@@ -201,16 +207,18 @@ def experiment(params):
         y_train = encoder.transform(y_train)
         y_test = encoder.transform(y_test)
 
+        print("Fit Model")
         model = LogisticRegression()
         model.fit(X_train, y_train)
         model_score = model.score(X_test, y_test)
         print('Logistic Regression Accuracy:', model_score)
 
-        preds2 = model2.predict_proba(X_test)
+        preds2 = model.predict_proba(X_test)
         classes2 = np.argmax(preds2, axis=1)
         print(classification_report(y_test, classes2))
 
     elif model_type == "MLP":
+        print("Vectorizing")
         vectorizer = TfidfVectorizer()
         X_train = vectorizer.fit_transform(X_train).astype('float16')
         X_test = vectorizer.transform(X_test).astype('float16')
@@ -219,6 +227,8 @@ def experiment(params):
         encoder.fit(y_train)
         y_train = encoder.transform(y_train)
         y_test = encoder.transform(y_test)
+        y_train = y_train.reshape(-1, 1)
+        y_test = y_test.reshape(-1, 1)
 
         input_dim = X_train.shape[1]  # Number of features
 
@@ -228,8 +238,9 @@ def experiment(params):
         model3.add(Dense(2, activation='softmax'))
         opt = optimizer_function(optimizer_string, learning_rate)
         model3.compile(optimizer=opt, loss=loss, metrics=["accuracy"])
+        print("Fit Model")
         history = model3.fit(X_train, y_train, 
-                    batch_size=batch_size, epochs=2, 
+                    batch_size=batch_size, epochs=epochs, 
                    )
         plot_history(history=history)
         score = model3.evaluate(X_test, y_test, verbose=0)
@@ -308,7 +319,7 @@ def experiment(params):
         opt = optimizer_function(optimizer_string, learning_rate)
         model3.compile(optimizer=opt, loss=loss, metrics=["accuracy"])
         history3 = model3.fit(X_train_vect, y_train_vect, 
-                    batch_size=1024, epochs=2, 
+                    batch_size=batch_size, epochs=epochs, 
                    )
         print("Model3")
         plot_history(history=history3)
@@ -340,13 +351,9 @@ def experiment(params):
 if __name__ == "__main__":
     import json
     import argparse
-    # import wandb
+    import os
 
-    # from datetime import datetime
-
-    # now = datetime.now()
-
-    # current_time = now.strftime("%H:%M:%S")
+    os.environ['XLA_FLAGS'] = '--xla_gpu_cuda_data_dir=/usr/lib/cuda/'
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--params", "-p", type=str, help="JSON params file")
@@ -365,7 +372,6 @@ if __name__ == "__main__":
     params = defaults(params, default_params)
     # log_name = params["dataset"] + "-" + current_time
     # wandb.init(project="CNN-Magic", name = log_name, entity="qinjerem", config=params)
-
     experiment(params)
     print("Done")
 
