@@ -4,7 +4,10 @@ Our experiments currently work on Linux, and Windows. Mac has problem with Tenso
 The experiments run on Python 3.10.9. Later versions ought to work fine as well.
 
 IMPORTANT! Currently our experiment only supports Logistic Regression as Tensorflow seems to have some issue that we haven't been able to solve yet. Notebooks will be available to run the other experiments in Google Colab. Currently Github seems to not render the notebooks, but you can download it or use the following links: 
+
 MLP -> https://colab.research.google.com/drive/1Sg3ApaYDMRTYZ5Q9xvnAzOijSANzG5B8?usp=sharing
+
+
 CNN-RNN -> https://colab.research.google.com/drive/18LACptyOZISTL4N_3-HdYJHO8gRaEvwL?usp=sharing
 
 ## To replicate our experiments, please follow the following steps:
