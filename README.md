@@ -3,7 +3,7 @@
 Our experiments currently work on Linux, and Windows. Mac has problem with Tensorflow.
 The experiments run on Python 3.10.9. Later versions ought to work fine as well.
 
-IMPORTANT! Currently our experiment only supports Logistic Regression as Tensorflow seems to have some issue that we haven't been able to solve yet. Notebooks will be available to run the other experiments.
+IMPORTANT! Currently our experiment only supports Logistic Regression as Tensorflow seems to have some issue that we haven't been able to solve yet. Notebooks will be available to run the other experiments in Google Colab.
 
 ## To replicate our experiments, please follow the following steps:
   ### 1) Create a virtual environment first (optional) with the following shell command:
